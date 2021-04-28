@@ -33,6 +33,18 @@ android {
     buildFeatures {
         viewBinding true
     }
+
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/ASL2.0'
+        exclude("META-INF/*.kotlin_module")
+    }
 }
 
 dependencies {
@@ -44,6 +56,12 @@ dependencies {
 
     // fragments
     implementation "androidx.fragment:fragment-ktx:$fragments_version"
+
+    // permissions
+    implementation 'com.afollestad.assent:core:3.0.0-RC4'
+
+    // alert dialog
+    implementation 'com.afollestad.material-dialogs:core:3.3.0'
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'androidx.core:core-ktx:1.3.2'

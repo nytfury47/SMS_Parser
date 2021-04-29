@@ -16,7 +16,10 @@ import com.afollestad.assent.Permission
 import com.afollestad.assent.askForPermissions
 import com.afollestad.materialdialogs.MaterialDialog
 
+import com.tan.smsparser.R
+import com.tan.smsparser.data.local.AppPreferences
 import com.tan.smsparser.databinding.FragmentMainBinding
+import com.tan.smsparser.util.getCurrentDateTime
 import com.tan.smsparser.viewmodel.MainViewModel
 
 /*
@@ -51,6 +54,7 @@ class MainFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        initSubviews()
         setupClickListeners()
         fragmentTextUpdateObserver()
     }
@@ -64,22 +68,30 @@ class MainFragment: Fragment() {
 
     //region Private functions
 
+    private fun initSubviews() {
+        val lastSyncTime = getCurrentDateTime(AppPreferences.lastSyncDate)
+
+        binding.fragmentSyncResultTextView.visibility = View.GONE
+        binding.fragmentLastSyncTextView.text = String.format(getString(R.string.last_successful_sync_text_view), lastSyncTime)
+    }
+
     // Setup the button in our fragment to call getUpdatedText method in viewModel
     private fun setupClickListeners() {
-        binding.fragmentButton.setOnClickListener { readSMS() }
+        binding.fragmentSyncButton.setOnClickListener { syncSMS() }
     }
 
     // Observer is waiting for viewModel to update our UI
     private fun fragmentTextUpdateObserver() {
-        viewModel.uiTextLiveData.observe(viewLifecycleOwner, { updatedText ->
-            binding.fragmentTextView.text = updatedText
+        viewModel.uiSyncResultTextLiveData.observe(viewLifecycleOwner, { updatedText ->
+            binding.fragmentSyncResultTextView.visibility = View.VISIBLE
+            binding.fragmentSyncResultTextView.text = String.format(getString(R.string.sync_result_text_view), updatedText)
         })
-        viewModel.uiTextLiveData2.observe(viewLifecycleOwner, { updatedText ->
-            binding.fragmentTextView2.text = updatedText
+        viewModel.uiLastSyncTextLiveData.observe(viewLifecycleOwner, { updatedText ->
+            binding.fragmentLastSyncTextView.text = String.format(getString(R.string.last_successful_sync_text_view), updatedText)
         })
     }
 
-    private fun readSMS() {
+    private fun syncSMS() {
         // Perform viewModel action only when READ_SMS permission is granted
         // If READ_SMS permission is not granted, ask user to grant permission from Settings page
         askForPermissions(PERMISSION_READ_SMS) { result ->

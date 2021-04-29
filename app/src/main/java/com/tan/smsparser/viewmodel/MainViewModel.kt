@@ -8,13 +8,21 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
-import com.tan.smsparser.data.model.DataModel
 import com.tan.smsparser.data.local.AppPreferences
+import com.tan.smsparser.data.remote.APIService
+import com.tan.smsparser.util.getCurrentDateTime
+
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
 
 import org.json.JSONArray
+import retrofit2.Retrofit
 
-import java.text.SimpleDateFormat
-import java.util.Locale
 import java.util.Calendar
 
 /*
@@ -24,19 +32,12 @@ import java.util.Calendar
  */
 class MainViewModel: ViewModel() {
 
-    //region Private properties
-
-    // Create the model which contains data for our UI
-    private val model = DataModel(textForUI = "Here's the updated text!")
-
-    //endregion
-
     //region Public properties
 
     // Create MutableLiveData which MainFragment can subscribe to
     // When this data changes, it triggers the UI to do an update
-    val uiTextLiveData = MutableLiveData<String>()
-    val uiTextLiveData2 = MutableLiveData<String>()
+    val uiSyncResultTextLiveData = MutableLiveData<String>()
+    val uiLastSyncTextLiveData = MutableLiveData<String>()
 
     //endregion
 
@@ -77,11 +78,41 @@ class MainViewModel: ViewModel() {
         }
     }
 
-    /**
-     * Helper function for converting timestamp to presentable Date/Time
-     */
-    private fun getCurrentDateTime(timeInMillis: Long) = SimpleDateFormat("MM/dd/yyyy HH:mm:ss",
-            Locale.getDefault()).format(timeInMillis)
+    private fun postToServer(targetSMSList: ArrayList<String>) {
+        // Create Retrofit
+        val retrofit = Retrofit.Builder()
+            .baseUrl("http://dummy.restapiexample.com")
+            .build()
+
+        // Create Service
+        val service = retrofit.create(APIService::class.java)
+
+        // Create JSONArray string for requestBody
+        val jsonArrayString = JSONArray(targetSMSList).toString()
+
+        // Create RequestBody ( We're not using any converter, like GsonConverter, MoshiConverter e.t.c, that's why we use RequestBody )
+        val requestBody = jsonArrayString.toRequestBody("application/json".toMediaTypeOrNull())
+
+        CoroutineScope(Dispatchers.IO).launch {
+            // Do the POST request and get response
+            val response = service.createEmployee(requestBody)
+
+            withContext(Dispatchers.Main) {
+                var syncResult = "Success!"
+
+                if (response.isSuccessful) {
+                    // If post is successful, update last successful sync time
+                    AppPreferences.lastSyncDate = Calendar.getInstance().timeInMillis
+                } else {
+                    syncResult = "Error ${response.code()} - ${response.message()}"
+                }
+
+                // Update Sync Result / Last Sync Time
+                uiSyncResultTextLiveData.postValue(syncResult)
+                uiLastSyncTextLiveData.postValue(getCurrentDateTime(AppPreferences.lastSyncDate))
+            }
+        }
+    }
 
     //endregion
 
@@ -94,15 +125,7 @@ class MainViewModel: ViewModel() {
         getTargetSMSList(context, targetSMSList)
 
         // send to target sms list to server
-
-
-        // if server returns 201, save last sync time
-        AppPreferences.lastSyncDate = Calendar.getInstance().timeInMillis
-
-        val jsonArray = JSONArray(targetSMSList)
-        val updatedText = model.textForUI
-        uiTextLiveData.postValue("Sync result: $jsonArray")
-        uiTextLiveData2.postValue("Last sync: ${getCurrentDateTime(AppPreferences.lastSyncDate)}")
+        postToServer(targetSMSList)
     }
 
     //endregion

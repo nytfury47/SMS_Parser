@@ -37,36 +37,30 @@ class MainViewModel: ViewModel() {
     //region Private functions
 
     // Retrieve and add target SMS to list
-    private fun getTargetSMSList(context: Context, targetSMSList: ArrayList<String>) {
+    private fun getTargetSMSList(context: Context, targetSMSList: MutableMap<Long, String>) {
         try {
-            val targetUri = "content://sms/inbox"
-            val targetFields = arrayOf("_id", "address", "person", "body", "date", "type")
+            val columnDate = "date"
+            val columnBody = "body"
+            val targetFields = arrayOf(columnDate, columnBody)
             val targetSelection = "address='$TARGET_SMS_SENDER' COLLATE NOCASE"
+            val targetUri = "content://sms/inbox"
             val uri = Uri.parse(targetUri)
             val cur = context.contentResolver.query(uri, targetFields, targetSelection, null, null)
 
-            if (cur != null) {
-                if (cur.moveToFirst()) {
-                    //val indexAddress = cur.getColumnIndex("address")
-                    //val indexPerson = cur.getColumnIndex("person")
-                    val indexBody = cur.getColumnIndex("body")
-                    //val indexDate = cur.getColumnIndex("date")
-                    //val indexType = cur.getColumnIndex("type")
+            if (cur != null && cur.moveToFirst()) {
+                val indexDate = cur.getColumnIndex(columnDate)
+                val indexBody = cur.getColumnIndex(columnBody)
 
-                    do {
-                        //val strAddress = cur.getString(indexAddress)
-                        //val intPerson = cur.getInt(indexPerson)
-                        val strBody = cur.getString(indexBody)
-                        //val longDate = cur.getLong(indexDate)
-                        //val intType = cur.getInt(indexType)
+                do {
+                    val longDate = cur.getLong(indexDate)
+                    val strBody = cur.getString(indexBody)
 
-                        targetSMSList.add(strBody)
-                    } while (cur.moveToNext())
+                    targetSMSList[longDate] = strBody
+                } while (cur.moveToNext())
 
-                    if (!cur.isClosed) {
-                        cur.close()
-                        //cur = null
-                    }
+                if (!cur.isClosed) {
+                    cur.close()
+                    //cur = null
                 }
             }
         } catch (ex: SQLiteException) {
@@ -79,7 +73,7 @@ class MainViewModel: ViewModel() {
     //region Public functions
 
     fun syncSMS(context: Context) {
-        val targetSMSList = ArrayList<String>()
+        val targetSMSList = mutableMapOf<Long, String>()
 
         // get target sms list
         getTargetSMSList(context, targetSMSList)
@@ -89,7 +83,7 @@ class MainViewModel: ViewModel() {
 
         // delete if 201
 
-        val jsonArray = JSONArray(targetSMSList)
+        val jsonArray = JSONArray(targetSMSList.keys)
         val updatedText = model.textForUI
         uiTextLiveData.postValue(jsonArray.toString())
     }
@@ -97,6 +91,6 @@ class MainViewModel: ViewModel() {
     //endregion
 
     companion object {
-        private const val TARGET_SMS_SENDER = "GCash"
+        private const val TARGET_SMS_SENDER = "fbs"
     }
 }

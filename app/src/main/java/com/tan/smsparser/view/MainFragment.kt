@@ -22,12 +22,8 @@ import com.afollestad.assent.askForPermissions
 import com.afollestad.materialdialogs.MaterialDialog
 
 import com.tan.smsparser.R
-import com.tan.smsparser.data.local.AppPreferences
 import com.tan.smsparser.databinding.FragmentMainBinding
 import com.tan.smsparser.viewmodel.MainViewModel
-
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 /*
  *      MainFragment
@@ -61,7 +57,6 @@ class MainFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        initSubviews()
         setupClickListeners()
         uiUpdateObserver()
     }
@@ -75,14 +70,6 @@ class MainFragment: Fragment() {
 
     //region Private functions
 
-    private fun initSubviews() {
-        val lastSyncTime = getCurrentDateTime(AppPreferences.lastSyncDate)
-
-        binding.progressBar.visibility = View.INVISIBLE
-        binding.fragmentSyncResultTextView.visibility = View.GONE
-        binding.fragmentLastSyncTextView.text = String.format(getString(R.string.last_successful_sync_text_view), lastSyncTime)
-    }
-
     // Setup the button in our fragment to call syncSMS method in viewModel
     private fun setupClickListeners() {
         binding.fragmentSyncButton.setOnClickListener { syncSMS() }
@@ -91,14 +78,14 @@ class MainFragment: Fragment() {
     // Observer is waiting for viewModel to update our UI
     private fun uiUpdateObserver() {
         viewModel.uiSyncResultTextLiveData.observe(viewLifecycleOwner, { updatedText ->
-            val lastSyncTime = getCurrentDateTime(AppPreferences.lastSyncDate)
-
             toggleSyncButton(true)
 
             binding.fragmentSyncResultTextView.visibility = View.VISIBLE
             binding.fragmentSyncResultTextView.text = String.format(getString(R.string.sync_result_text_view), updatedText)
+        })
 
-            binding.fragmentLastSyncTextView.text = String.format(getString(R.string.last_successful_sync_text_view), lastSyncTime)
+        viewModel.uiLastSyncTextLiveData.observe(viewLifecycleOwner, { updatedText ->
+            binding.fragmentLastSyncTextView.text = String.format(getString(R.string.last_successful_sync_text_view), updatedText)
         })
     }
 
@@ -155,10 +142,6 @@ class MainFragment: Fragment() {
     //endregion
 
     //region Utility functions
-
-    // Converting timestamp to presentable Date/Time
-    private fun getCurrentDateTime(timeInMillis: Long): String = SimpleDateFormat("MM/dd/yyyy HH:mm:ss",
-        Locale.getDefault()).format(timeInMillis)
 
     // Check for internet connection
     @Suppress("DEPRECATION")

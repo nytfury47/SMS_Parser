@@ -24,6 +24,8 @@ import org.json.JSONArray
 
 import retrofit2.Retrofit
 
+import java.text.SimpleDateFormat
+import java.util.Locale
 import java.util.Calendar
 
 /*
@@ -38,8 +40,14 @@ class MainViewModel: ViewModel() {
     // Create MutableLiveData which MainFragment can subscribe to
     // When this data changes, it triggers the UI to do an update
     val uiSyncResultTextLiveData = MutableLiveData<String>()
+    val uiLastSyncTextLiveData = MutableLiveData<String>()
 
     //endregion
+
+    init {
+        uiSyncResultTextLiveData.postValue("")
+        uiLastSyncTextLiveData.postValue("")
+    }
 
     //region Private functions
 
@@ -107,11 +115,17 @@ class MainViewModel: ViewModel() {
                     syncResult = "Error ${response.code()} - ${response.message()}"
                 }
 
-                // Update Sync Result / Last Sync Time
+                // Update Sync Result
                 uiSyncResultTextLiveData.postValue(syncResult)
+                // Update Last Sync Date
+                uiLastSyncTextLiveData.postValue(getCurrentDateTime(AppPreferences.lastSyncDate))
             }
         }
     }
+
+    // Converting timestamp to presentable Date/Time
+    private fun getCurrentDateTime(timeInMillis: Long): String = SimpleDateFormat("MM/dd/yyyy HH:mm:ss",
+        Locale.getDefault()).format(timeInMillis)
 
     //endregion
 

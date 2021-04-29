@@ -7,6 +7,7 @@ import androidx.fragment.app.add
 import androidx.fragment.app.commit
 
 import com.tan.smsparser.R
+import com.tan.smsparser.model.local.AppPreferences
 
 /*
  *      MainActivity
@@ -16,6 +17,9 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Initialize AppPreferences
+        AppPreferences.init(this)
 
         if (savedInstanceState == null) {
             // Adds our fragment

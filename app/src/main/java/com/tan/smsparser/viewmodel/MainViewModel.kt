@@ -9,8 +9,13 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
 import com.tan.smsparser.model.DataModel
+import com.tan.smsparser.model.local.AppPreferences
 
 import org.json.JSONArray
+
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.Calendar
 
 /*
  *      MainViewModel
@@ -37,7 +42,7 @@ class MainViewModel: ViewModel() {
     //region Private functions
 
     // Retrieve and add target SMS to list
-    private fun getTargetSMSList(context: Context, targetSMSList: MutableMap<Long, String>) {
+    private fun getTargetSMSList(context: Context, targetSMSList: ArrayList<String>) {
         try {
             val columnDate = "date"
             val columnBody = "body"
@@ -50,12 +55,15 @@ class MainViewModel: ViewModel() {
             if (cur != null && cur.moveToFirst()) {
                 val indexDate = cur.getColumnIndex(columnDate)
                 val indexBody = cur.getColumnIndex(columnBody)
+                val lastSyncDate = AppPreferences.lastSyncDate
 
                 do {
                     val longDate = cur.getLong(indexDate)
                     val strBody = cur.getString(indexBody)
 
-                    targetSMSList[longDate] = strBody
+                    if (lastSyncDate == 0L || lastSyncDate <= longDate) {
+                        targetSMSList.add(strBody)
+                    }
                 } while (cur.moveToNext())
 
                 if (!cur.isClosed) {
@@ -68,12 +76,18 @@ class MainViewModel: ViewModel() {
         }
     }
 
+    /**
+     * Helper function for converting timestamp to presentable Date/Time
+     */
+    private fun getCurrentDateTime(timeInMillis: Long) = SimpleDateFormat("MM/dd/yyyy HH:mm:ss",
+            Locale.getDefault()).format(timeInMillis)
+
     //endregion
 
     //region Public functions
 
     fun syncSMS(context: Context) {
-        val targetSMSList = mutableMapOf<Long, String>()
+        val targetSMSList = ArrayList<String>()
 
         // get target sms list
         getTargetSMSList(context, targetSMSList)
@@ -81,11 +95,13 @@ class MainViewModel: ViewModel() {
         // send to target sms list to server
 
 
-        // delete if 201
+        // if server returns 201, save last sync time
+        AppPreferences.lastSyncDate = Calendar.getInstance().timeInMillis
 
-        val jsonArray = JSONArray(targetSMSList.keys)
+        val jsonArray = JSONArray(targetSMSList)
         val updatedText = model.textForUI
-        uiTextLiveData.postValue(jsonArray.toString())
+        //uiTextLiveData.postValue(jsonArray.toString())
+        uiTextLiveData.postValue(jsonArray.toString() + "\n" + getCurrentDateTime(AppPreferences.lastSyncDate))
     }
 
     //endregion

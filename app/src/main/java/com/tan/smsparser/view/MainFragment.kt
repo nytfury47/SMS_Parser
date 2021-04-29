@@ -63,7 +63,7 @@ class MainFragment: Fragment() {
 
         initSubviews()
         setupClickListeners()
-        fragmentTextUpdateObserver()
+        uiUpdateObserver()
     }
 
     override fun onDestroyView() {
@@ -89,7 +89,7 @@ class MainFragment: Fragment() {
     }
 
     // Observer is waiting for viewModel to update our UI
-    private fun fragmentTextUpdateObserver() {
+    private fun uiUpdateObserver() {
         viewModel.uiSyncResultTextLiveData.observe(viewLifecycleOwner, { updatedText ->
             val lastSyncTime = getCurrentDateTime(AppPreferences.lastSyncDate)
 

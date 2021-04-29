@@ -36,6 +36,7 @@ class MainViewModel: ViewModel() {
     // Create MutableLiveData which MainFragment can subscribe to
     // When this data changes, it triggers the UI to do an update
     val uiTextLiveData = MutableLiveData<String>()
+    val uiTextLiveData2 = MutableLiveData<String>()
 
     //endregion
 
@@ -58,11 +59,11 @@ class MainViewModel: ViewModel() {
                 val lastSyncDate = AppPreferences.lastSyncDate
 
                 do {
-                    val longDate = cur.getLong(indexDate)
-                    val strBody = cur.getString(indexBody)
+                    val smsDate = cur.getLong(indexDate)
+                    val smsBody = cur.getString(indexBody)
 
-                    if (lastSyncDate == 0L || lastSyncDate <= longDate) {
-                        targetSMSList.add(strBody)
+                    if (lastSyncDate < smsDate) {
+                        targetSMSList.add(smsBody)
                     }
                 } while (cur.moveToNext())
 
@@ -100,8 +101,8 @@ class MainViewModel: ViewModel() {
 
         val jsonArray = JSONArray(targetSMSList)
         val updatedText = model.textForUI
-        //uiTextLiveData.postValue(jsonArray.toString())
-        uiTextLiveData.postValue(jsonArray.toString() + "\n" + getCurrentDateTime(AppPreferences.lastSyncDate))
+        uiTextLiveData.postValue("Sync result: $jsonArray")
+        uiTextLiveData2.postValue("Last sync: ${getCurrentDateTime(AppPreferences.lastSyncDate)}")
     }
 
     //endregion

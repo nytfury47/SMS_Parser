@@ -74,6 +74,9 @@ class MainFragment: Fragment() {
         viewModel.uiTextLiveData.observe(viewLifecycleOwner, { updatedText ->
             binding.fragmentTextView.text = updatedText
         })
+        viewModel.uiTextLiveData2.observe(viewLifecycleOwner, { updatedText ->
+            binding.fragmentTextView2.text = updatedText
+        })
     }
 
     private fun readSMS() {

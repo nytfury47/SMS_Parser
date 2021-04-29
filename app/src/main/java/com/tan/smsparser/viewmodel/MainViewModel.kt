@@ -34,15 +34,16 @@ class MainViewModel: ViewModel() {
 
     //endregion
 
-    //region Public functions
+    //region Private functions
 
-    // Read all SMS from GCash
-    fun readSMS(context: Context) {
-        val messageList = ArrayList<String>()
-
+    // Retrieve and add target SMS to list
+    private fun getTargetSMSList(context: Context, targetSMSList: ArrayList<String>) {
         try {
-            val uri = Uri.parse(SMS_URI_INBOX)
-            val cur = context.contentResolver.query(uri, CURSOR_QUERY_PROJECTION, CURSOR_QUERY_SELECTION, null, CURSOR_QUERY_SORT_ORDER)
+            val targetUri = "content://sms/inbox"
+            val targetFields = arrayOf("_id", "address", "person", "body", "date", "type")
+            val targetSelection = "address='$TARGET_SMS_SENDER' COLLATE NOCASE"
+            val uri = Uri.parse(targetUri)
+            val cur = context.contentResolver.query(uri, targetFields, targetSelection, null, null)
 
             if (cur != null) {
                 if (cur.moveToFirst()) {
@@ -53,13 +54,13 @@ class MainViewModel: ViewModel() {
                     //val indexType = cur.getColumnIndex("type")
 
                     do {
-                        //val strAddress = cur.getString(index_Address)
-                        //val intPerson = cur.getInt(index_Person)
+                        //val strAddress = cur.getString(indexAddress)
+                        //val intPerson = cur.getInt(indexPerson)
                         val strBody = cur.getString(indexBody)
-                        //val longDate = cur.getLong(index_Date)
-                        //val int_Type = cur.getInt(index_Type)
+                        //val longDate = cur.getLong(indexDate)
+                        //val intType = cur.getInt(indexType)
 
-                        messageList.add(strBody)
+                        targetSMSList.add(strBody)
                     } while (cur.moveToNext())
 
                     if (!cur.isClosed) {
@@ -71,18 +72,31 @@ class MainViewModel: ViewModel() {
         } catch (ex: SQLiteException) {
             ex.message?.let { Log.d("SQLiteException", it) }
         }
+    }
 
-        val jsonArray = JSONArray(messageList)
+    //endregion
+
+    //region Public functions
+
+    fun syncSMS(context: Context) {
+        val targetSMSList = ArrayList<String>()
+
+        // get target sms list
+        getTargetSMSList(context, targetSMSList)
+
+        // send to target sms list to server
+
+
+        // delete if 201
+
+        val jsonArray = JSONArray(targetSMSList)
         val updatedText = model.textForUI
         uiTextLiveData.postValue(jsonArray.toString())
     }
 
     //endregion
+
     companion object {
-        private const val SMS_URI_INBOX = "content://sms/inbox"
-        private val CURSOR_QUERY_PROJECTION = arrayOf("_id", "address", "person", "body", "date", "type")
-        //private const val CURSOR_QUERY_SELECTION = "address='GCash' OR address='GCASH' OR address='gcash'"
-        private const val CURSOR_QUERY_SELECTION = "address='FBS'"
-        private const val CURSOR_QUERY_SORT_ORDER = "date asc"
+        private const val TARGET_SMS_SENDER = "GCash"
     }
 }

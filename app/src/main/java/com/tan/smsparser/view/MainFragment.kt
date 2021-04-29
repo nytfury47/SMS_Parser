@@ -81,7 +81,7 @@ class MainFragment: Fragment() {
         // If READ_SMS permission is not granted, ask user to grant permission from Settings page
         askForPermissions(PERMISSION_READ_SMS) { result ->
             if (result[PERMISSION_READ_SMS] == GrantResult.GRANTED) {
-                context?.let { viewModel.readSMS(it) }
+                context?.let { viewModel.syncSMS(it) }
             } else {
                 requestForPermissions()
             }

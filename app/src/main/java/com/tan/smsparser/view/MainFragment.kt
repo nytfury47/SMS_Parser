@@ -1,12 +1,17 @@
 package com.tan.smsparser.view
 
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -78,7 +83,7 @@ class MainFragment: Fragment() {
         binding.fragmentLastSyncTextView.text = String.format(getString(R.string.last_successful_sync_text_view), lastSyncTime)
     }
 
-    // Setup the button in our fragment to call getUpdatedText method in viewModel
+    // Setup the button in our fragment to call syncSMS method in viewModel
     private fun setupClickListeners() {
         binding.fragmentSyncButton.setOnClickListener { syncSMS() }
     }
@@ -98,6 +103,12 @@ class MainFragment: Fragment() {
     }
 
     private fun syncSMS() {
+        // Internet must be available
+        if (!isInternetAvailable()) {
+            Toast.makeText(context, R.string.check_internet, Toast.LENGTH_SHORT).show()
+            return
+        }
+
         // Perform viewModel action only when READ_SMS permission is granted
         // If READ_SMS permission is not granted, ask user to grant permission from Settings page
         askForPermissions(PERMISSION_READ_SMS) { result ->
@@ -135,14 +146,43 @@ class MainFragment: Fragment() {
         }
     }
 
-    // Converting timestamp to presentable Date/Time
-    private fun getCurrentDateTime(timeInMillis: Long): String = SimpleDateFormat("MM/dd/yyyy HH:mm:ss",
-        Locale.getDefault()).format(timeInMillis)
-
     // Switch on/off sync button and progress bar
     private fun toggleSyncButton(enable: Boolean) {
         binding.fragmentSyncButton.isEnabled = enable
         binding.progressBar.visibility = if (enable) View.INVISIBLE else View.VISIBLE
+    }
+
+    //endregion
+
+    //region Utility functions
+
+    // Converting timestamp to presentable Date/Time
+    private fun getCurrentDateTime(timeInMillis: Long): String = SimpleDateFormat("MM/dd/yyyy HH:mm:ss",
+        Locale.getDefault()).format(timeInMillis)
+
+    // Check for internet connection
+    @Suppress("DEPRECATION")
+    private fun isInternetAvailable(): Boolean {
+        var result = false
+        val cm = context?.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            cm.run {
+                cm.getNetworkCapabilities(cm.activeNetwork)?.run {
+                    result = when {
+                        hasTransport(NetworkCapabilities.TRANSPORT_WIFI)        -> true
+                        hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)    -> true
+                        hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)    -> true
+                        else                                                    -> false
+                    }
+                }
+            }
+        } else {
+            val networkInfo = cm.activeNetworkInfo
+            result = (networkInfo !=null && networkInfo.isConnected)
+        }
+
+        return result
     }
 
     //endregion

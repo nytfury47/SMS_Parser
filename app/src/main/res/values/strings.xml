@@ -3,4 +3,5 @@
     <string name="sync_button_text">Sync</string>
     <string name="sync_result_text_view">Sync result: %1$s</string>
     <string name="last_successful_sync_text_view">Last successful sync: %1$s</string>
+    <string name="check_internet">There is an issue with the network connection. Please check your settings and try again.</string>
 </resources>

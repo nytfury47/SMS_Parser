@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
+import com.tan.smsparser.Constants
 import com.tan.smsparser.data.local.AppPreferences
 import com.tan.smsparser.data.remote.APIService
 
@@ -20,6 +21,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 
 import org.json.JSONArray
+
 import retrofit2.Retrofit
 
 import java.util.Calendar
@@ -47,7 +49,7 @@ class MainViewModel: ViewModel() {
             val columnDate = "date"
             val columnBody = "body"
             val targetFields = arrayOf(columnDate, columnBody)
-            val targetSelection = "address='$TARGET_SMS_SENDER' COLLATE NOCASE"
+            val targetSelection = "address='${Constants.TARGET_SMS_SENDER}' COLLATE NOCASE"
             val targetUri = "content://sms/inbox"
             val uri = Uri.parse(targetUri)
             val cur = context.contentResolver.query(uri, targetFields, targetSelection, null, null)
@@ -79,7 +81,7 @@ class MainViewModel: ViewModel() {
     private fun postToServer(targetSMSList: ArrayList<String>) {
         // Create Retrofit
         val retrofit = Retrofit.Builder()
-            .baseUrl("http://dummy.restapiexample.com")
+            .baseUrl(Constants.API_BASE_URL)
             .build()
 
         // Create Service
@@ -93,7 +95,7 @@ class MainViewModel: ViewModel() {
 
         CoroutineScope(Dispatchers.IO).launch {
             // Do the POST request and get response
-            val response = service.createEmployee(requestBody)
+            val response = service.createSMSList(requestBody)
 
             withContext(Dispatchers.Main) {
                 var syncResult = "Success!"
@@ -126,8 +128,4 @@ class MainViewModel: ViewModel() {
     }
 
     //endregion
-
-    companion object {
-        private const val TARGET_SMS_SENDER = "fbs"
-    }
 }

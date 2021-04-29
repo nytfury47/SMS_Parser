@@ -8,8 +8,8 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
-import com.tan.smsparser.model.DataModel
-import com.tan.smsparser.model.local.AppPreferences
+import com.tan.smsparser.data.model.DataModel
+import com.tan.smsparser.data.local.AppPreferences
 
 import org.json.JSONArray
 

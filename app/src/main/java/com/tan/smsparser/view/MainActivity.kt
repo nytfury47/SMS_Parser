@@ -7,7 +7,7 @@ import androidx.fragment.app.add
 import androidx.fragment.app.commit
 
 import com.tan.smsparser.R
-import com.tan.smsparser.model.local.AppPreferences
+import com.tan.smsparser.data.local.AppPreferences
 
 /*
  *      MainActivity

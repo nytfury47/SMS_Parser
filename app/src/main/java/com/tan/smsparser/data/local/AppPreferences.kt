@@ -1,4 +1,4 @@
-package com.tan.smsparser.model.local
+package com.tan.smsparser.data.local
 
 import android.content.Context
 import android.content.SharedPreferences

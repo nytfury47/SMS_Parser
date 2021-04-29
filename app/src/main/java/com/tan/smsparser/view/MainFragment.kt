@@ -19,8 +19,10 @@ import com.afollestad.materialdialogs.MaterialDialog
 import com.tan.smsparser.R
 import com.tan.smsparser.data.local.AppPreferences
 import com.tan.smsparser.databinding.FragmentMainBinding
-import com.tan.smsparser.util.getCurrentDateTime
 import com.tan.smsparser.viewmodel.MainViewModel
+
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 /*
  *      MainFragment
@@ -71,6 +73,7 @@ class MainFragment: Fragment() {
     private fun initSubviews() {
         val lastSyncTime = getCurrentDateTime(AppPreferences.lastSyncDate)
 
+        binding.progressBar.visibility = View.INVISIBLE
         binding.fragmentSyncResultTextView.visibility = View.GONE
         binding.fragmentLastSyncTextView.text = String.format(getString(R.string.last_successful_sync_text_view), lastSyncTime)
     }
@@ -83,11 +86,14 @@ class MainFragment: Fragment() {
     // Observer is waiting for viewModel to update our UI
     private fun fragmentTextUpdateObserver() {
         viewModel.uiSyncResultTextLiveData.observe(viewLifecycleOwner, { updatedText ->
+            val lastSyncTime = getCurrentDateTime(AppPreferences.lastSyncDate)
+
+            toggleSyncButton(true)
+
             binding.fragmentSyncResultTextView.visibility = View.VISIBLE
             binding.fragmentSyncResultTextView.text = String.format(getString(R.string.sync_result_text_view), updatedText)
-        })
-        viewModel.uiLastSyncTextLiveData.observe(viewLifecycleOwner, { updatedText ->
-            binding.fragmentLastSyncTextView.text = String.format(getString(R.string.last_successful_sync_text_view), updatedText)
+
+            binding.fragmentLastSyncTextView.text = String.format(getString(R.string.last_successful_sync_text_view), lastSyncTime)
         })
     }
 
@@ -96,7 +102,10 @@ class MainFragment: Fragment() {
         // If READ_SMS permission is not granted, ask user to grant permission from Settings page
         askForPermissions(PERMISSION_READ_SMS) { result ->
             if (result[PERMISSION_READ_SMS] == GrantResult.GRANTED) {
-                context?.let { viewModel.syncSMS(it) }
+                context?.let {
+                    toggleSyncButton(false)
+                    viewModel.syncSMS(it)
+                }
             } else {
                 requestForPermissions()
             }
@@ -124,6 +133,16 @@ class MainFragment: Fragment() {
                 data = Uri.fromParts("package", it.packageName, null)
             })
         }
+    }
+
+    // Converting timestamp to presentable Date/Time
+    private fun getCurrentDateTime(timeInMillis: Long): String = SimpleDateFormat("MM/dd/yyyy HH:mm:ss",
+        Locale.getDefault()).format(timeInMillis)
+
+    // Switch on/off sync button and progress bar
+    private fun toggleSyncButton(enable: Boolean) {
+        binding.fragmentSyncButton.isEnabled = enable
+        binding.progressBar.visibility = if (enable) View.INVISIBLE else View.VISIBLE
     }
 
     //endregion

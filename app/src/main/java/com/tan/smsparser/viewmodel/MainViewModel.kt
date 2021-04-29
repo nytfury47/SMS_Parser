@@ -10,7 +10,6 @@ import androidx.lifecycle.ViewModel
 
 import com.tan.smsparser.data.local.AppPreferences
 import com.tan.smsparser.data.remote.APIService
-import com.tan.smsparser.util.getCurrentDateTime
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -37,7 +36,6 @@ class MainViewModel: ViewModel() {
     // Create MutableLiveData which MainFragment can subscribe to
     // When this data changes, it triggers the UI to do an update
     val uiSyncResultTextLiveData = MutableLiveData<String>()
-    val uiLastSyncTextLiveData = MutableLiveData<String>()
 
     //endregion
 
@@ -109,7 +107,6 @@ class MainViewModel: ViewModel() {
 
                 // Update Sync Result / Last Sync Time
                 uiSyncResultTextLiveData.postValue(syncResult)
-                uiLastSyncTextLiveData.postValue(getCurrentDateTime(AppPreferences.lastSyncDate))
             }
         }
     }

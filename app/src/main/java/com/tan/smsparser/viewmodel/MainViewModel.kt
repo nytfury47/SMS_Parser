@@ -54,26 +54,20 @@ class MainViewModel: ViewModel() {
     // Retrieve and add target SMS to list
     private fun getTargetSMSList(context: Context, targetSMSList: ArrayList<String>) {
         try {
-            val columnDate = "date"
             val columnBody = "body"
-            val targetFields = arrayOf(columnDate, columnBody)
-            val targetSelection = "address='${Constants.TARGET_SMS_SENDER}' COLLATE NOCASE"
+            val targetKeys = arrayOf(columnBody)
+            val targetSelection = "address = ? COLLATE NOCASE AND date > cast(? as LONG)"
+            val targetSelectionArgs = arrayOf(Constants.TARGET_SMS_SENDER, AppPreferences.lastSyncDate.toString())
             val targetUri = "content://sms/inbox"
             val uri = Uri.parse(targetUri)
-            val cur = context.contentResolver.query(uri, targetFields, targetSelection, null, null)
+            val cur = context.contentResolver.query(uri, targetKeys, targetSelection, targetSelectionArgs, null)
 
             if (cur != null && cur.moveToFirst()) {
-                val indexDate = cur.getColumnIndex(columnDate)
                 val indexBody = cur.getColumnIndex(columnBody)
-                val lastSyncDate = AppPreferences.lastSyncDate
 
                 do {
-                    val smsDate = cur.getLong(indexDate)
                     val smsBody = cur.getString(indexBody)
-
-                    if (lastSyncDate < smsDate) {
-                        targetSMSList.add(smsBody)
-                    }
+                    targetSMSList.add(smsBody)
                 } while (cur.moveToNext())
 
                 if (!cur.isClosed) {
